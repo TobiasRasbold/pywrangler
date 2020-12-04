@@ -359,7 +359,6 @@ class PlainFrame(_ImmutablePlainFrame):
 
         """
 
-        from pyspark.sql import SparkSession
         from pyspark.sql import types
 
         converted = [column.to_pyspark() for column in
@@ -369,7 +368,9 @@ class PlainFrame(_ImmutablePlainFrame):
         data = list(zip(*values))
         schema = types.StructType(fields)
 
+        from pyspark.sql import SparkSession
         spark = SparkSession.builder.getOrCreate()
+
         return spark.createDataFrame(data=data, schema=schema)
 
     def _validate_plaincolumns(self):
@@ -578,7 +579,11 @@ class PlainFrame(_ImmutablePlainFrame):
 
         # transpose data if row wise
         if row_wise:
-            data = zip(*data)
+            data = list(zip(*data))
+
+        # handle empty data GH#29
+        if not data:
+            data = [[]] * len(columns)
 
         # instantiate PlainColumns
         zipped = zip(columns, dtypes, data)
